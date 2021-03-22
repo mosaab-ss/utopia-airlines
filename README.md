@@ -6,17 +6,12 @@ Utopia Airlines is a mock project for an imaginary airlines company.
 ```mysql
 ALTER TABLE `utopia`.`airplane_type` 
 ADD COLUMN `business_class` INT UNSIGNED NOT NULL AFTER `max_capacity`,
-ADD COLUMN `first_class` INT UNSIGNED NOT NULL AFTER `business_class`,
-ADD COLUMN `speed` INT UNSIGNED NOT NULL AFTER `first_class`;
-```
-- `route`
-```mysql
-ALTER TABLE `utopia`.`route` 
-ADD COLUMN `miles` INT UNSIGNED NOT NULL AFTER `destination_id`;
+ADD COLUMN `first_class` INT UNSIGNED NOT NULL AFTER `business_class`;
 ```
 - `flight`
 ```mysql
 ALTER TABLE `utopia`.`flight`
+ADD COLUMN `arrival_time` DATETIME NOT NULL AFTER `departure_time`,
 ADD COLUMN `reserved_business` INT UNSIGNED NOT NULL AFTER `reserved_seats`,
 ADD COLUMN `reserved_first` INT UNSIGNED NOT NULL AFTER `reserved_business`,
 ADD COLUMN `business_price` FLOAT NOT NULL AFTER `seat_price`,
