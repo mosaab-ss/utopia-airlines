@@ -31,6 +31,10 @@ public class AdminMenu {
 	}
 
 	public void getCRUDMenu() {
-
+		loop: while (true) {
+			System.out.println("Welcome admin!");
+			if ("0".equals(app.getStringChoice()))
+				break loop;
+		}
 	}
 }
