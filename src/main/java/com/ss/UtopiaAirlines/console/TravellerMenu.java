@@ -13,7 +13,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TravellerMenu extends EmployeeMenu {
+public class TravellerMenu extends BaseMenu {
 
 	private TravellerService travellerService = null;
 	private Application app = null;
@@ -31,7 +31,7 @@ public class TravellerMenu extends EmployeeMenu {
 		System.out.print("Password: ");
 		String password = app.shaHash(app.getStringChoice());
 
-		User user = travellerService.getUser(username, password);
+		User user = travellerService.readUserByUP(username, password);
 
 		if (user == null || !"Traveller".equals(user.getUserRole().getName())) {
 			System.out.println("Username or password wrong.");
@@ -65,28 +65,10 @@ public class TravellerMenu extends EmployeeMenu {
 		int pageOffset = offset;
 
 		loop: while(true) {
-			List<Flight> flights = travellerService.getFlights(pageOffset);
-			List<String> ids = new ArrayList<>();
-
-			for (Flight flight : flights) {
-				ids.add(flight.getId().toString());
-
-				Route route = flight.getRoutes().get(0);
-
-				System.out.printf("%s) %s, %-15s -> %s, %s%n",
-						flight.getId(),
-						route.getOriginAirport().getIataId(),
-						route.getOriginAirport().getCity(),
-						route.getDestAirport().getIataId(),
-						route.getDestAirport().getCity()
-				);
-			}
-
-			System.out.println("0) Quit to previous");
-			System.out.println("n) Next page \tp) Previous page");
-
-
+			List<Flight> flights = travellerService.readFlights(pageOffset);
+			List<String> ids = getFlightList(flights);
 			String choice = app.getStringChoice();
+
 			switch (choice) {
 				case "0":
 					break loop;
@@ -105,14 +87,14 @@ public class TravellerMenu extends EmployeeMenu {
 
 	public void getSeatMenu(int id) throws SQLException, ClassNotFoundException {
 		loop: while (true) {
-			Flight flight = travellerService.getFlight(id);
+			Flight flight = travellerService.readFlightById(id);
 
-			;
+			Integer[] remainingSeats = travellerService.getRemainingSeats(flight);
 
 			System.out.println("1) View FLight Details");
-			System.out.printf("2) First %s%n", (flight.getAirplane().getAirplaneType().getFirstClass() - flight.getReservedFirst() > 0) ? "" : "(Unavailable)");
-			System.out.printf("3) Business %s%n", (flight.getAirplane().getAirplaneType().getBusinessClass() - flight.getReservedBusiness() > 0) ? "" : "(Unavailable)");
-			System.out.printf("4) Economy %s%n", (flight.getAirplane().getAirplaneType().getMaxCapacity() - flight.getReservedSeats() > 0) ? "" : "(Unavailable)");
+			System.out.printf("2) First %s%n", (remainingSeats != null && remainingSeats[1] > 0) ? "" : "(Unavailable)");
+			System.out.printf("3) Business %s%n", (remainingSeats != null && remainingSeats[2] > 0) ? "" : "(Unavailable)");
+			System.out.printf("4) Economy %s%n", (remainingSeats != null && remainingSeats[3] > 0) ? "" : "(Unavailable)");
 			System.out.println("0) Quit to cancel operation");
 
 			String choice = app.getStringChoice();
@@ -120,7 +102,9 @@ public class TravellerMenu extends EmployeeMenu {
 			if ("0".equals(choice)) {
 				break loop;
 			} else if ("1".equals(choice)) {
-				getDetailedFlight(flight);
+				while ("0".equals(app.getStringChoice())) {
+					getDetailedFlight(flight);
+				}
 			} else if ("2".equals(choice) && flight.getAirplane().getAirplaneType().getFirstClass() - flight.getReservedFirst() > 0) {
 				System.out.println(reserveSeat(flight, 1));
 			} else if ("3".equals(choice) && flight.getAirplane().getAirplaneType().getBusinessClass() - flight.getReservedBusiness() > 0) {
@@ -133,7 +117,7 @@ public class TravellerMenu extends EmployeeMenu {
 
 	public String reserveSeat(Flight flight, int seatClass) throws SQLException {
 		loop: while (true) {
-			String ticketConfirmFormat = "Ticket price $%s. Are you sure you want to book this ticket?%n1) Yes%n2) Cancel";
+			String ticketConfirmFormat = "Ticket price $%s. Are you sure you want to book this ticket?%n1) Yes%n2) Cancel%n";
 			switch (seatClass) {
 				case 1:
 					System.out.printf(ticketConfirmFormat, flight.getFirstPrice());
@@ -198,27 +182,9 @@ public class TravellerMenu extends EmployeeMenu {
 
 		loop: while(true) {
 			List<Flight> flights = travellerService.getFlightsForUser(this.user, pageOffset);
-			List<String> ids = new ArrayList<>();
-
-			for (Flight flight : flights) {
-				ids.add(flight.getId().toString());
-
-				Route route = flight.getRoutes().get(0);
-
-				System.out.printf("%s) %s, %-15s -> %s, %s%n",
-						flight.getId(),
-						route.getOriginAirport().getIataId(),
-						route.getOriginAirport().getCity(),
-						route.getDestAirport().getIataId(),
-						route.getDestAirport().getCity()
-				);
-			}
-
-			System.out.println("0) Quit to previous");
-			System.out.println("n) Next page \tp) Previous page");
-
-
+			List<String> ids = getFlightList(flights);
 			String choice = app.getStringChoice();
+
 			switch (choice) {
 				case "0":
 					break loop;
@@ -229,7 +195,7 @@ public class TravellerMenu extends EmployeeMenu {
 					pageOffset = (pageOffset > 10) ? pageOffset - 10 : 0;
 				default:
 					if (ids.contains(choice)) {
-						System.out.printf("Are you sure you want to cancel this flight?%n1) Yes%n2) No");
+						System.out.printf("Are you sure you want to cancel this flight?%n1) Yes%n2) No%n");
 
 						switch (app.getStringChoice()) {
 							case "1":

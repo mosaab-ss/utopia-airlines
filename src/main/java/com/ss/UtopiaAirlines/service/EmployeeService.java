@@ -1,9 +1,8 @@
 package com.ss.UtopiaAirlines.service;
+
 import com.ss.UtopiaAirlines.dao.AirplaneDAO;
 import com.ss.UtopiaAirlines.dao.AirplaneTypeDAO;
 import com.ss.UtopiaAirlines.dao.FlightDAO;
-import com.ss.UtopiaAirlines.dao.RouteDAO;
-import com.ss.UtopiaAirlines.dao.UserDAO;
 import com.ss.UtopiaAirlines.entity.Airplane;
 import com.ss.UtopiaAirlines.entity.AirplaneType;
 import com.ss.UtopiaAirlines.entity.Flight;
@@ -13,98 +12,63 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
-public class EmployeeService {
+public class EmployeeService extends BaseService implements FlightCRUD, SeatsCRUD, UserCRUD {
 
 	Util util = new Util();
 
-	public List<Flight> getFlights(int offset) throws SQLException {
-		Connection conn = null;
-
-		try {
-			conn = util.getConnection();
-
-			FlightDAO flightDao = new FlightDAO(conn);
-			RouteDAO routeDao = new RouteDAO(conn);
-
-			List<Flight> flights = flightDao.readAllFlights(offset,10);
-
-			for (Flight flight : flights) {
-				flight.setRoutes(routeDao.readRouteById(flight.getRouteId()));
-			}
-
-			conn.commit();
-
-			return flights;
-		} catch (SQLException | ClassNotFoundException e) {
-			if (conn != null) {
-				conn.rollback();
-			}
-			e.printStackTrace();
-			return null;
-		} finally {
-			if (conn != null) {
-				conn.close();
-			}
-		}
+	@Override
+	public String deleteFlight(int id) {
+		return null;
 	}
 
-	public Flight getFlight(int id) throws SQLException {
-		Connection conn = null;
-
-		try {
-			conn = util.getConnection();
-
-			FlightDAO flightDao = new FlightDAO(conn);
-
-			List<Flight> flights = flightDao.readFlightById(id);
-
-			conn.commit();
-
-			return flights.get(0);
-		} catch (SQLException | ClassNotFoundException e) {
-			if (conn != null) {
-				conn.rollback();
-			}
-			e.printStackTrace();
-			return null;
-		} finally {
-			if (conn != null) {
-				conn.close();
-			}
-		}
+	@Override
+	public String addFlight(Flight flight) {
+		return null;
 	}
 
-	public String updateFlight(Flight flight, Flight updatedFlight) throws SQLException {
-		Connection conn = null;
+	@Override
+	public String addSeats(AirplaneType airplaneType) {
+		return null;
+	}
 
-		try {
-			conn = util.getConnection();
+	@Override
+	public String deleteSeats(int id) {
+		return null;
+	}
 
-			FlightDAO flightDao = new FlightDAO(conn);
-			RouteDAO routeDAO = new RouteDAO(conn);
+	@Override
+	public String updateSeats(AirplaneType airplaneType) {
+		return null;
+	}
 
-			if (!flight.getRoutes().get(0).getOriginId().equals(updatedFlight.getRoutes().get(0).getOriginId()) ||
-					!flight.getRoutes().get(0).getDestinationId().equals(updatedFlight.getRoutes().get(0).getDestinationId())) {
-				int routePK = routeDAO.addRoute(updatedFlight.getRoutes().get(0));
-				updatedFlight.setRouteId(routePK);
-			}
+	@Override
+	public String addUser(User user) {
+		return null;
+	}
 
-			flightDao.updateFlight(updatedFlight);
+	@Override
+	public List<User> readUsers(int offset) {
+		return null;
+	}
 
-			conn.commit();
+	@Override
+	public List<User> readUsersByRole(int offset, int roleId) throws SQLException, ClassNotFoundException {
+		return null;
+	}
 
-			return "Flight updated!";
-		} catch (SQLException | ClassNotFoundException e) {
-			if (conn != null) {
-				conn.rollback();
-			}
-			e.printStackTrace();
-			return "Flight could not be updated.";
-		} finally {
-			if (conn != null) {
-				conn.close();
-			}
-		}
+	@Override
+	public User readUserById(int id) {
+		return null;
+	}
+
+	@Override
+	public String updateUser(User user) {
+		return null;
+	}
+
+	@Override
+	public String deleteUser(int id) {
+		return null;
 	}
 
 	public String updateSeating(int seatingClass, int numberOfSeats, Flight flight) throws SQLException {
@@ -150,33 +114,8 @@ public class EmployeeService {
 			if (conn != null) {
 				conn.rollback();
 			}
-			e.printStackTrace();
+
 			return "Seating could not be updated.";
-		} finally {
-			if (conn != null) {
-				conn.close();
-			}
-		}
-	}
-
-	public User getUser(String username, String password) throws ClassNotFoundException, SQLException {
-		Connection conn = null;
-
-		try {
-			conn = util.getConnection();
-
-			UserDAO userDao = new UserDAO(conn);
-
-			User user = userDao.readUserByUP(username, password).get(0);
-
-			conn.commit();
-			return user;
-		} catch (SQLException | ClassNotFoundException e) {
-			if (conn != null) {
-				conn.rollback();
-			}
-			e.printStackTrace();
-			return null;
 		} finally {
 			if (conn != null) {
 				conn.close();

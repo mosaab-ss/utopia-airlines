@@ -59,6 +59,10 @@ public class UserDAO extends BaseDAO<User> {
 		return read("SELECT * FROM user ORDER BY id ASC LIMIT ?, ?", new Object[] {offset, limit});
 	}
 
+	public List<User> readAllUser(int offset, int limit, int roleId) throws ClassNotFoundException, SQLException {
+		return read("SELECT * FROM user WHERE role_id = ? ORDER BY id ASC LIMIT ?, ?", new Object[] {roleId, offset, limit});
+	}
+
 	public List<User> readUserById(User user) throws ClassNotFoundException, SQLException {
 		return read("SELECT * FROM user WHERE id = ?", new Object[] {
 				user.getId()
@@ -90,17 +94,13 @@ public class UserDAO extends BaseDAO<User> {
 			u.setPassword(resultSet.getString("password"));
 			u.setPhone(resultSet.getString("phone"));
 
-			try {
-				resultSet.findColumn("name");
-
+			if (doesColumnExist(resultSet, "name")) {
 				UserRole ur = new UserRole();
 
 				ur.setId(resultSet.getInt("role_id"));
 				ur.setName(resultSet.getString("name"));
 
 				u.setUserRole(ur);
-			} catch (SQLException e) {
-				// We didn't query for relational this time
 			}
 
 			users.add(u);

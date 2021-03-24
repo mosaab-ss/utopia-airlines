@@ -8,16 +8,16 @@ import com.ss.UtopiaAirlines.service.EmployeeService;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class EmployeeMenu {
+public class EmployeeMenu extends BaseMenu {
 
 	private EmployeeService employeeService = null;
 	private Application app = null;
 
 	public EmployeeMenu(Application app) {
+		super(app);
 		this.employeeService = new EmployeeService();
 		this.app = app;
 	}
@@ -28,7 +28,7 @@ public class EmployeeMenu {
 		System.out.print("Password: ");
 		String password = app.shaHash(app.getStringChoice());
 
-		User user = employeeService.getUser(username, password);
+		User user = employeeService.readUserByUP(username, password);
 
 		if (user == null || !"Employee".equals(user.getUserRole().getName())) {
 			System.out.println("Username or password wrong.");
@@ -41,27 +41,8 @@ public class EmployeeMenu {
 		int pageOffset = offset;
 
 		loop: while(true) {
-			List<Flight> flights = employeeService.getFlights(pageOffset);
-			List<String> ids = new ArrayList<>();
-
-			for (Flight flight : flights) {
-				ids.add(flight.getId().toString());
-
-				Route route = flight.getRoutes().get(0);
-
-				System.out.printf("%s) %s, %-15s -> %s, %s%n",
-						flight.getId(),
-						route.getOriginAirport().getIataId(),
-						route.getOriginAirport().getCity(),
-						route.getDestAirport().getIataId(),
-						route.getDestAirport().getCity()
-				);
-			}
-
-			System.out.println("0) Quit to previous");
-			System.out.println("n) Next page \tp) Previous page");
-
-
+			List<Flight> flights = employeeService.readFlights(pageOffset);
+			List<String> ids = getFlightList(flights);
 			String choice = app.getStringChoice();
 			switch (choice) {
 				case "0":
@@ -81,7 +62,7 @@ public class EmployeeMenu {
 
 	public void getFlightMenu(int id) throws ClassNotFoundException, SQLException {
 		loop: while(true) {
-			Flight flight = employeeService.getFlight(id);
+			Flight flight = employeeService.readFlightById(id);
 
 			System.out.println("1) View more details about the flight");
 			System.out.println("2) Update the details of the flight");
@@ -95,57 +76,15 @@ public class EmployeeMenu {
 				case "0":
 					break loop;
 				case "1":
-					getDetailedFlight(flight);
+					while ("0".equals(app.getStringChoice())) {
+						getDetailedFlight(flight);
+					}
 					break;
 				case "2":
 					getUpdateFlight(flight);
 					break;
 				case "3":
 					getUpdateFlightSeat(flight);
-			}
-		}
-	}
-
-	public void getDetailedFlight(Flight flight) throws ClassNotFoundException, SQLException {
-		loop: while(true) {
-			System.out.printf("You have chosen to view the flight with Flight ID: %s and Departure Airport %s, %s and Arrival Airport: %s, %s%n",
-					flight.getId(),
-					flight.getRoutes().get(0).getOriginAirport().getIataId(),
-					flight.getRoutes().get(0).getOriginAirport().getCity(),
-					flight.getRoutes().get(0).getDestAirport().getIataId(),
-					flight.getRoutes().get(0).getDestAirport().getCity()
-			);
-
-			System.out.printf("Departure Airport: %s, %s | Arrival Airport: %s, %s%n",
-					flight.getRoutes().get(0).getOriginAirport().getIataId(),
-					flight.getRoutes().get(0).getOriginAirport().getCity(),
-					flight.getRoutes().get(0).getDestAirport().getIataId(),
-					flight.getRoutes().get(0).getDestAirport().getCity()
-			);
-
-			System.out.printf("Departure Date: %s | Departure Time: %s%n",
-					flight.getDepartureTime().toLocalDateTime().toLocalDate(),
-					flight.getDepartureTime().toLocalDateTime().toLocalTime()
-			);
-
-			System.out.printf("Arrival Date: %s | Arrival Time: %s%n",
-					flight.getArrivalTime().toLocalDateTime().toLocalDate(),
-					flight.getArrivalTime().toLocalDateTime().toLocalTime()
-			);
-
-			System.out.println("Available seats by class");
-			System.out.printf("First -> %s%nBusiness -> %s%nEconomy -> %s%n",
-					flight.getAirplane().getAirplaneType().getFirstClass() - flight.getReservedFirst(),
-					flight.getAirplane().getAirplaneType().getBusinessClass() - flight.getReservedBusiness(),
-					flight.getAirplane().getAirplaneType().getMaxCapacity() - flight.getReservedSeats()
-			);
-
-			System.out.println("0) Quit to previous");
-
-
-			String choice = app.getStringChoice();
-			if ("0".equals(choice)) {
-				break loop;
 			}
 		}
 	}
@@ -248,7 +187,7 @@ public class EmployeeMenu {
 		}
 
 
-		System.out.println(employeeService.updateFlight(flight, updatedFlight));
+		System.out.println(employeeService.updateFlight(updatedFlight));
 	}
 
 	public void getUpdateFlightSeat(Flight flight) throws ClassNotFoundException, SQLException {
@@ -256,7 +195,7 @@ public class EmployeeMenu {
 			String changesChoice = "";
 
 			System.out.println("Pick the seat class you want to add seats of, to your flight:");
-			System.out.printf("1) First%n2) Business%n3) Economy%n4) Quit and cancel");
+			System.out.printf("1) First%n2) Business%n3) Economy%n4) Quit and cancel%n");
 			changesChoice = app.getStringChoice();
 
 			switch (changesChoice) {

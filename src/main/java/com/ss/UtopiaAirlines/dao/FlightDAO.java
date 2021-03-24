@@ -53,9 +53,9 @@ public class FlightDAO extends BaseDAO<Flight> {
 		});
 	}
 
-	public void deleteFlight(Flight flight) throws ClassNotFoundException, SQLException {
+	public void deleteFlight(int id) throws ClassNotFoundException, SQLException {
 		save("DELETE FROM flight WHERE id = ?", new Object[] {
-				flight.getId()
+				id
 		});
 	}
 
@@ -74,27 +74,30 @@ public class FlightDAO extends BaseDAO<Flight> {
 	}
 
 	public List<Flight> readAllFlightsByUser(int offset, int limit, User user) throws ClassNotFoundException, SQLException {
-		return read("SELECT * FROM flight " +
+		return read("SELECT f.id, f.route_id, f.airplane_id, f.departure_time, f.arrival_time, f.reserved_seats, f.reserved_business, f.reserved_first, f.seat_price, f.business_price, f.first_price, " +
+				"b.booking_id AS booking_id, b.is_active, b.confirmation_code, b.seat_class, " +
+				"bu.user_id " +
+				"FROM flight AS f " +
 				"INNER JOIN booking_user AS bu " +
 					"ON bu.user_id = ? " +
 				"INNER JOIN flight_bookings AS fb " +
 					"ON fb.booking_id = bu.booking_id " +
-				"INNER JOIN booking " +
-					"ON booking.id = fb.booking_id " +
-				"WHERE flight.id = fb.flight_id AND booking.is_active = 1 " +
-				"ORDER BY id ASC LIMIT ?, ?", new Object[] {
+				"INNER JOIN booking AS b " +
+					"ON b.id = fb.booking_id " +
+				"WHERE f.id = fb.flight_id AND booking.is_active = 1 " +
+				"ORDER BY flight.id ASC LIMIT ?, ?", new Object[] {
 						user.getId(),
 						offset,
 						limit
 		});
 	}
 
-	public List<Flight> readFlightById(int id) throws ClassNotFoundException, SQLException {
+	public List<Flight> readFlightObjectById(int id) throws ClassNotFoundException, SQLException {
 		return read("SELECT f.id, f.route_id, f.airplane_id, f.departure_time, f.arrival_time, f.reserved_seats, f.reserved_business, f.reserved_first, f.seat_price, f.business_price, f.first_price, " +
-				"r.id AS rId, r.origin_id, r.destination_id, " +
+				"r.origin_id, r.destination_id, " +
 				"oa.city AS origCity, da.city AS destCity, " +
-				"a.id AS aId, a.type_id, " +
-				"at.id AS atId, at.max_capacity, at.business_class, at.first_class " +
+				"a.type_id, " +
+				"at.max_capacity, at.business_class, at.first_class " +
 				"FROM flight AS f " +
 				"INNER JOIN route AS r " +
 				"ON f.route_id = r.id " +
@@ -130,41 +133,52 @@ public class FlightDAO extends BaseDAO<Flight> {
 			f.setBusinessPrice(resultSet.getFloat("business_price"));
 			f.setFirstPrice(resultSet.getFloat("first_price"));
 
-			try {
-				resultSet.findColumn("rId");
-
+			if (doesColumnExist(resultSet, "origin_id")) {
 				Route r = new Route();
-				Airport oa = new Airport();
-				Airport da = new Airport();
+
+				r.setId(resultSet.getInt("route_id"));
+				r.setOriginId(resultSet.getString("origin_id"));
+				r.setDestinationId(resultSet.getString("destination_id"));
+
+				if (doesColumnExist(resultSet, "origCity")) {
+					Airport oa = new Airport();
+
+					oa.setIataId(resultSet.getString("origin_id"));
+					oa.setCity(resultSet.getString("origCity"));
+
+					r.setOriginAirport(oa);
+				}
+
+				if (doesColumnExist(resultSet, "destCity")) {
+					Airport da = new Airport();
+
+					da.setIataId(resultSet.getString("destination_id"));
+					da.setCity(resultSet.getString("destCity"));
+
+					r.setDestAirport(da);
+				}
+
+				f.setRoutes(Collections.singletonList(r));
+			}
+
+			if (doesColumnExist(resultSet, "type_id")) {
 				Airplane a = new Airplane();
-				AirplaneType at = new AirplaneType();
 
-				at.setId(resultSet.getInt("atId"));
-				at.setMaxCapacity(resultSet.getInt("max_capacity"));
-				at.setBusinessClass(resultSet.getInt("business_class"));
-				at.setFirstClass(resultSet.getInt("first_class"));
-
-				oa.setIataId(resultSet.getString("origin_id"));
-				oa.setCity(resultSet.getString("origCity"));
-
-				da.setIataId(resultSet.getString("destination_id"));
-				da.setCity(resultSet.getString("destCity"));
-
-				r.setId(resultSet.getInt("rId"));
-				r.setOriginAirport(oa);
-				r.setDestAirport(da);
-				r.setOriginId(oa.getIataId());
-				r.setDestinationId(da.getIataId());
-
-				a.setAirplaneType(at);
-
-				a.setId(resultSet.getInt("aId"));
+				a.setId(resultSet.getInt("airplane_id"));
 				a.setTypeId(resultSet.getInt("type_id"));
 
+				if (doesColumnExist(resultSet, "max_capacity")) {
+					AirplaneType at = new AirplaneType();
+
+					at.setId(resultSet.getInt("type_id"));
+					at.setMaxCapacity(resultSet.getInt("max_capacity"));
+					at.setBusinessClass(resultSet.getInt("business_class"));
+					at.setFirstClass(resultSet.getInt("first_class"));
+
+					a.setAirplaneType(at);
+				}
+
 				f.setAirplane(a);
-				f.setRoutes(Collections.singletonList(r));
-			} catch (SQLException e) {
-				// We didn't query for relational this time
 			}
 
 			flights.add(f);

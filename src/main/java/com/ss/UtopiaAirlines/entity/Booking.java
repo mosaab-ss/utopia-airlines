@@ -8,6 +8,7 @@ public class Booking {
 	private Integer id;
 	private Boolean isActive;
 	private String confirmationCode;
+	private Integer seatClass;
 	private BookingAgent bookingAgent;
 	private BookingGuest bookingGuest;
 	private BookingPayment bookingPayment;
@@ -45,6 +46,16 @@ public class Booking {
 		this.confirmationCode = confirmationCode;
 	}
 
+	@Basic
+	@Column(name = "seat_class", nullable = false)
+	public Integer getSeatClass() {
+		return seatClass;
+	}
+
+	public void setSeatClass(Integer seatClass) {
+		this.seatClass = seatClass;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
@@ -56,6 +67,7 @@ public class Booking {
 		if (isActive != null ? !isActive.equals(booking.isActive) : booking.isActive != null) return false;
 		if (confirmationCode != null ? !confirmationCode.equals(booking.confirmationCode) : booking.confirmationCode != null)
 			return false;
+		if (seatClass != null ? !seatClass.equals(booking.seatClass) : booking.seatClass != null) return false;
 
 		return true;
 	}
@@ -65,6 +77,7 @@ public class Booking {
 		int result = id != null ? id.hashCode() : 0;
 		result = 31 * result + (isActive != null ? isActive.hashCode() : 0);
 		result = 31 * result + (confirmationCode != null ? confirmationCode.hashCode() : 0);
+		result = 31 * result + (seatClass != null ? seatClass.hashCode() : 0);
 		return result;
 	}
 

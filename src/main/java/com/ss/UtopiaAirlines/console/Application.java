@@ -32,7 +32,7 @@ public class Application {
 					case 3:
 						travellerMenu.getMainMenu();
 						break;
-					case 4:
+					case 0:
 						break loop;
 					default:
 						System.out.println("Please provide a valid choice.");
@@ -49,7 +49,7 @@ public class Application {
 				"1) Employee",
 				"2) Administrator",
 				"3) Traveler",
-				"4) Quit"
+				"0) Quit"
 		);
 
 		return getIntChoice();

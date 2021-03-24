@@ -5,6 +5,7 @@ import com.ss.UtopiaAirlines.entity.AirplaneType;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +49,7 @@ public class AirplaneDAO extends BaseDAO<Airplane> {
 	}
 
 	public List<Airplane> getAirplaneById(int id) throws ClassNotFoundException, SQLException {
-		return read("SELECT a.id, a.type_id, at.id AS atId, at.max_capacity, at.business_class, at.first_class FROM airplane AS a " +
+		return read("SELECT a.id, a.type_id, at.max_capacity, at.business_class, at.first_class FROM airplane AS a " +
 				"INNER JOIN airplane_type AS at " +
 					"ON a.type_id = at.id " +
 				"WHERE a.id = ?", new Object[] {
@@ -66,19 +67,15 @@ public class AirplaneDAO extends BaseDAO<Airplane> {
 			a.setId(resultSet.getInt("id"));
 			a.setTypeId(resultSet.getInt("type_id"));
 
-			try {
-				resultSet.findColumn("atId");
-
+			if (doesColumnExist(resultSet, "max_capacity")) {
 				AirplaneType at = new AirplaneType();
 
-				at.setId(resultSet.getInt("atId"));
+				at.setId(resultSet.getInt("type_id"));
 				at.setMaxCapacity(resultSet.getInt("max_capacity"));
 				at.setBusinessClass(resultSet.getInt("business_class"));
 				at.setFirstClass(resultSet.getInt("first_class"));
 
 				a.setAirplaneType(at);
-			} catch (SQLException e) {
-				// We didn't query for relational this time
 			}
 
 			airplanes.add(a);

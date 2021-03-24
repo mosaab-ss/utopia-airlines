@@ -3,6 +3,7 @@ package com.ss.UtopiaAirlines.dao;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.ResultSet;
@@ -62,4 +63,14 @@ public abstract class BaseDAO<T> {
 	}
 
 	abstract public List<T> extractData(ResultSet resultSet) throws ClassNotFoundException, SQLException;
+
+	public Boolean doesColumnExist(ResultSet resultSet, String columnName) throws SQLException {
+		ResultSetMetaData rsmd = resultSet.getMetaData();
+		for (int i=1; i <= rsmd.getColumnCount(); i++) {
+			if (columnName.equals(rsmd.getColumnName(i))) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

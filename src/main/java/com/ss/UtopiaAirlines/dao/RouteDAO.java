@@ -73,22 +73,22 @@ public class RouteDAO extends BaseDAO<Route>{
 			r.setOriginId(resultSet.getString("origin_id"));
 			r.setDestinationId(resultSet.getString("destination_id"));
 
-			try {
-				resultSet.findColumn("origCity");
-
+			if (doesColumnExist(resultSet, "origCity")) {
 				Airport oa = new Airport();
-				Airport da = new Airport();
 
 				oa.setIataId(resultSet.getString("origin_id"));
 				oa.setCity(resultSet.getString("origCity"));
 
+				r.setOriginAirport(oa);
+			}
+
+			if (doesColumnExist(resultSet, "destCity")) {
+				Airport da = new Airport();
+
 				da.setIataId(resultSet.getString("destination_id"));
 				da.setCity(resultSet.getString("destCity"));
 
-				r.setOriginAirport(oa);
 				r.setDestAirport(da);
-			} catch (SQLException e) {
-				// We didn't query for relational this time
 			}
 
 			routes.add(r);

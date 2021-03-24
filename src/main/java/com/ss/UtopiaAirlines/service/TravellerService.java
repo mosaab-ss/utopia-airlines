@@ -20,9 +20,74 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
-public class TravellerService extends EmployeeService {
+public class TravellerService extends BaseService implements FlightCRUD, TicketCRUD, UserCRUD {
 
 	Util util = new Util();
+
+	@Override
+	public String addFlight(Flight flight) {
+		return null;
+	}
+
+	@Override
+	public String updateFlight(Flight flight) {
+		return null;
+	}
+
+	@Override
+	public String deleteFlight(int id) {
+		return null;
+	}
+
+	@Override
+	public List<Booking> readTickets(int offset) {
+		return null;
+	}
+
+	@Override
+	public Booking readTicketById(int id) {
+		return null;
+	}
+
+	@Override
+	public String deleteTicket(int id) {
+		return null;
+	}
+
+	@Override
+	public String updateTicket(Booking booking) {
+		return null;
+	}
+
+	@Override
+	public String addUser(User user) {
+		return null;
+	}
+
+	@Override
+	public List<User> readUsers(int offset) {
+		return null;
+	}
+
+	@Override
+	public List<User> readUsersByRole(int offset, int roleId) throws SQLException, ClassNotFoundException {
+		return null;
+	}
+
+	@Override
+	public User readUserById(int id) {
+		return null;
+	}
+
+	@Override
+	public String updateUser(User user) {
+		return null;
+	}
+
+	@Override
+	public String deleteUser(int id) {
+		return null;
+	}
 
 	public String bookTicket(Flight flight, int seatClass, User user, Passenger passenger, BookingPayment bookingPayment) throws SQLException {
 		Connection conn = null;
@@ -33,6 +98,7 @@ public class TravellerService extends EmployeeService {
 			Booking booking = new Booking();
 			booking.setActive(true);
 			booking.setConfirmationCode(UUID.randomUUID().toString().replace("-", ""));
+			booking.setSeatClass(seatClass);
 
 			BookingUser bookingUser = new BookingUser();
 			FlightBookings flightBookings = new FlightBookings();
@@ -44,12 +110,14 @@ public class TravellerService extends EmployeeService {
 			FlightBookingsDAO flightBookingsDAO = new FlightBookingsDAO(conn);
 			FlightDAO flightDAO = new FlightDAO(conn);
 
+			Integer[] remainingSeats = getRemainingSeats(flight);
+
 			// Update flight to reduce seats
-			if (seatClass == 1 && (flight.getAirplane().getAirplaneType().getFirstClass() - flight.getReservedFirst()) > 0) {
+			if (booking.getSeatClass() == 1 && remainingSeats != null && getRemainingSeats(flight)[1] > 0) {
 				flight.setReservedFirst(flight.getReservedFirst() + 1);
-			} else if (seatClass == 2 && (flight.getAirplane().getAirplaneType().getBusinessClass() - flight.getReservedBusiness()) > 0) {
+			} else if (booking.getSeatClass() == 2 && remainingSeats != null && getRemainingSeats(flight)[2] > 0) {
 				flight.setReservedBusiness(flight.getReservedBusiness() + 1);
-			} else if (seatClass == 3 && (flight.getAirplane().getAirplaneType().getMaxCapacity() - flight.getReservedSeats()) > 0) {
+			} else if (booking.getSeatClass() == 3 && remainingSeats != null && getRemainingSeats(flight)[3] > 0) {
 				flight.setReservedSeats(flight.getReservedSeats() + 1);
 			} else {
 				conn.rollback();
@@ -88,7 +156,7 @@ public class TravellerService extends EmployeeService {
 			if (conn != null) {
 				conn.rollback();
 			}
-			e.printStackTrace();
+
 			return "Flight could not be booked.";
 		} finally {
 			if (conn != null) {
@@ -119,7 +187,7 @@ public class TravellerService extends EmployeeService {
 			if (conn != null) {
 				conn.rollback();
 			}
-			e.printStackTrace();
+
 			return null;
 		} finally {
 			if (conn != null) {
@@ -128,29 +196,24 @@ public class TravellerService extends EmployeeService {
 		}
 	}
 
-	public String cancelBooking(int id, User user) throws SQLException {
+
+	public String cancelBooking(int id, User user) throws SQLException, ClassNotFoundException {
 		Connection conn = null;
 
-		try {
-			conn = util.getConnection();
+		conn = util.getConnection();
 
-			BookingDAO bookingDAO = new BookingDAO(conn);
-			bookingDAO.updateBookingByUser(user, false);
+		FlightDAO flightDAO = new FlightDAO(conn);
 
-			conn.commit();
+		Flight flight = flightDAO.readFlightsById(id).get(0);
 
+		if (conn != null) {
+			conn.close();
+		}
+
+		if ("Ticket updated successfully!".equals(updateTicketStateByUser(user, flight, false))) {
 			return "Flight cancelled successfully! Expect refund soon!";
-		} catch (SQLException | ClassNotFoundException e) {
-			if (conn != null) {
-				conn.rollback();
-			}
-			e.printStackTrace();
+		} else {
 			return "Flight could not be cancelled.";
-		} finally {
-			if (conn != null) {
-				conn.close();
-			}
 		}
 	}
-
 }

@@ -24,6 +24,11 @@ ALTER TABLE `utopia`.`flight`
     CHANGE COLUMN `id` `id` INT UNSIGNED NOT NULL AUTO_INCREMENT ;
 SET FOREIGN_KEY_CHECKS = 1;
 ```
+- `booking`
+```mysql
+ALTER TABLE `utopia`.`booking` 
+ADD COLUMN `seat_class` INT UNSIGNED NOT NULL AFTER `confirmation_code`;
+```
 
 ## Storing Password Hashes
 Passwords are stored as SHA-512 hashes using `SHA2('mypassword', 512)` in `INSERT`/`UPDATE` queries.
